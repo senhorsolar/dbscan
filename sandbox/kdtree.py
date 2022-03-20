@@ -4,7 +4,7 @@ import numpy as np
 from pprint import pformat
 
 
-class Node(namedtuple("Node", "point axis left right")):
+class Node(namedtuple("Node", "point axis left right idx")):
 
     def __repr__(self):
         return pformat(tuple(self))
@@ -68,7 +68,7 @@ class KdTree:
         return [heapnode.point for heapnode in heap]
 
 
-    def range_query(self, point, radius):
+    def range_query(self, point, radius, return_idx=False):
 
         points = []
 
@@ -77,7 +77,10 @@ class KdTree:
                 return
 
             if np.linalg.norm(point - node.point) <= radius:
-                points.append(node.point)
+                if return_idx:
+                    points.append(node.idx)
+                else:
+                    points.append(node.point)
 
             dist_to_splitting_plane = abs(node.point[node.axis] - point[node.axis])
 
@@ -113,7 +116,8 @@ class KdTree:
                 data[idxs_left[median_idx]],
                 axis,
                 recursive_helper(idxs_left[:median_idx], depth+1),
-                recursive_helper(idxs_left[median_idx+1:], depth+1)
+                recursive_helper(idxs_left[median_idx+1:], depth+1),
+                idxs_left[median_idx]
             )
 
         return recursive_helper(list(range(len(data))), 0)
